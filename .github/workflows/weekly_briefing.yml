@@ -1,0 +1,57 @@
+name: Weekly ecommerce briefing
+
+on:
+  schedule:
+    - cron: "0 13 * * 1"   # every Monday 13:00 UTC (8:00 AM US Central)
+  workflow_dispatch:
+    inputs:
+      week_end:
+        description: "Last day of the week to report (YYYY-MM-DD). Leave empty for the latest week."
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  briefing:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install requirements
+        run: pip install -r requirements.txt
+
+      - name: Run tests
+        run: python -m pytest -q
+
+      - name: Generate weekly briefing
+        env:
+          # Optional. If the secret is not set, the briefing is only saved as an artifact.
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          WEEK_END: ${{ github.event.inputs.week_end }}
+        run: |
+          if [ -n "$WEEK_END" ]; then
+            python -m src.main --week-end "$WEEK_END"
+          else
+            python -m src.main
+          fi
+
+      - name: Add briefing to the run summary
+        if: always()
+        run: |
+          if [ -f output/latest_briefing.md ]; then cat output/latest_briefing.md >> "$GITHUB_STEP_SUMMARY"; fi
+
+      - name: Upload briefing
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: weekly-briefing
+          path: output/*.md
+          if-no-files-found: warn

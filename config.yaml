@@ -1,0 +1,26 @@
+# Weekly ecommerce briefing settings. Paths are relative to this file.
+
+data:
+  orders_file: data/shopify_orders.csv
+  ads_file: data/ad_performance.csv
+
+output_dir: output
+currency_symbol: "$"
+
+report:
+  week_start: monday   # first day of the reporting week
+  week_end: null       # set e.g. "2026-10-11" to report a specific week; null = latest week in the data
+
+# Exception rules. Percentages are week-over-week changes.
+thresholds:
+  revenue_drop_pct: 10               # flag if revenue falls by more than this
+  orders_drop_pct: 10                # flag if orders fall by more than this
+  spend_increase_pct: 10             # flag if ad spend rises this much while revenue falls
+  min_roas: 3.5                      # flag if ROAS (attributed revenue / spend) is below this
+  refund_increase_pct: 10            # flag if refund value rises by more than this
+  discount_increase_pct: 20          # flag if discounts rise by more than this
+  conversion_rate_drop_pct: 15       # flag if ad conversion rate falls by more than this
+  cost_per_conversion_increase_pct: 15  # ...or cost per conversion rises by more than this
+
+slack:
+  enabled: true        # still requires the SLACK_WEBHOOK_URL environment variable
